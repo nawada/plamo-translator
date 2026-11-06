@@ -30,6 +30,9 @@ pub struct Settings {
     pub backend: String,
     /// コンテキスト長 (入力 + 出力の合計トークン)
     pub ctx_size: u32,
+    /// 翻訳が無い状態がこの秒数続いたらモデルを GPU メモリから解放する (0 = 解放しない)。
+    /// 次の翻訳時に自動で再読み込みされる (llama-server の --sleep-idle-seconds)
+    pub idle_unload_secs: u32,
     /// llama-server に追加で渡す引数 (空白区切り)
     pub extra_args: String,
     /// 任意の llama-server.exe を使う場合のパス (空なら自動ダウンロード)
@@ -73,6 +76,7 @@ impl Default for Settings {
             model_quant: "Q4_K_M".into(),
             backend: "vulkan".into(),
             ctx_size: 16384,
+            idle_unload_secs: 300,
             extra_args: String::new(),
             custom_server_path: String::new(),
             custom_model_path: String::new(),
@@ -121,6 +125,7 @@ impl Settings {
             self.backend = d.backend.clone();
         }
         self.ctx_size = self.ctx_size.clamp(2048, 32768);
+        self.idle_unload_secs = self.idle_unload_secs.min(24 * 3600);
         if self.shortcut.trim().is_empty() {
             self.shortcut = d.shortcut.clone();
         }
@@ -137,6 +142,7 @@ impl Settings {
             || self.model_quant != other.model_quant
             || self.backend != other.backend
             || self.ctx_size != other.ctx_size
+            || self.idle_unload_secs != other.idle_unload_secs
             || self.extra_args != other.extra_args
             || self.custom_server_path != other.custom_server_path
             || self.custom_model_path != other.custom_model_path

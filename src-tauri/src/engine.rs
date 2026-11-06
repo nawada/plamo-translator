@@ -294,8 +294,13 @@ async fn spawn_server(settings: &Settings, state: &AppState) -> Result<String, S
         .args(["-np", "1"])
         .args(["--host", "127.0.0.1"])
         .args(["--port", &port.to_string()])
-        .args(["--alias", SERVED_MODEL_NAME])
-        .args(settings.extra_args.split_whitespace())
+        .args(["--alias", SERVED_MODEL_NAME]);
+    // 未使用時はモデルを GPU メモリから解放し、次のリクエストで再読み込みする
+    // (追加引数で明示されている場合はそちらを優先)
+    if settings.idle_unload_secs > 0 && !settings.extra_args.contains("--sleep-idle-seconds") {
+        cmd.args(["--sleep-idle-seconds", &settings.idle_unload_secs.to_string()]);
+    }
+    cmd.args(settings.extra_args.split_whitespace())
         .stdin(std::process::Stdio::null())
         .stdout(log)
         .stderr(log2);

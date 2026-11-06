@@ -168,6 +168,19 @@
                   <option value="32768">32,768</option>
                 </select>
               </div>
+              <div class="row">
+                <label for="s-idle">未使用時に GPU メモリを解放</label>
+                <select id="s-idle">
+                  <option value="0">解放しない</option>
+                  <option value="30">30 秒後</option>
+                  <option value="60">1 分後</option>
+                  <option value="300">5 分後</option>
+                  <option value="900">15 分後</option>
+                  <option value="1800">30 分後</option>
+                  <option value="3600">1 時間後</option>
+                </select>
+              </div>
+              <p class="hint">解放後の最初の翻訳は、モデルの再読み込みのため数秒遅くなります。</p>
               <details class="advanced">
                 <summary>詳細設定</summary>
                 <div class="row">

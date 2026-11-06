@@ -12,6 +12,7 @@ Preferred Networks の翻訳特化 LLM [PLaMo 3 Translate](https://huggingface.c
 - **53 言語対応**、日本語の原文は自動で英語 (設定で変更可) に翻訳。
 - **翻訳オプション**: 文体 (です・ます調 / だ・である調)、用語集、参考文脈。
 - **長文対応**: 長い文章は段落単位に分割し、直前の対訳を履歴として渡しながら順に翻訳します。
+- **GPU メモリは使うときだけ**: 一定時間 (既定 5 分) 翻訳しないとモデルを GPU メモリから解放し、次の翻訳時に自動で再読み込みします。
 - タスクトレイ常駐、Windows 起動時の自動起動、多重起動防止。
 - 外部の OpenAI 互換サーバー (llama-server / vLLM) にも接続可能。
 
@@ -35,6 +36,7 @@ Preferred Networks の翻訳特化 LLM [PLaMo 3 Translate](https://huggingface.c
 - 呼び出しショートカット、選択文字列の自動翻訳の有無、最前面表示
 - 入力中の自動翻訳、日本語原文の翻訳先
 - モデルサイズ (0.8B / 2B / 8B) と量子化形式、実行デバイス (Vulkan / CPU / CUDA)、最大長
+- 未使用時に GPU メモリを解放するまでの時間 (解放しない / 30 秒〜1 時間)。解放後の最初の翻訳は再読み込みのぶん遅くなります
 - llama-server の追加引数、任意の llama-server.exe / GGUF ファイルの指定
 - 外部サーバー (URL・モデル名・API キー)
 - 自動起動、起動時にトレイへ格納、閉じるボタンの動作
@@ -58,6 +60,7 @@ Preferred Networks の翻訳特化 LLM [PLaMo 3 Translate](https://huggingface.c
   Completions API に `stop: ["<|plamo:tag|>", "<|plamo:bos|>"]`, `temperature: 0` で送信します (`src-tauri/src/pfml.rs`)。
 - llama.cpp は動作確認済みのリリース (`src-tauri/src/catalog.rs` の `LLAMA_CPP_TAG`) を GitHub Releases から取得します。
 - llama-server はジョブオブジェクトに入れて起動するため、アプリが異常終了しても残りません。
+- GPU メモリの解放は llama-server の `--sleep-idle-seconds` を使っています。
 
 ## 開発
 

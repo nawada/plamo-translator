@@ -14,6 +14,7 @@ interface Settings {
   modelQuant: string;
   backend: string;
   ctxSize: number;
+  idleUnloadSecs: number;
   extraArgs: string;
   customServerPath: string;
   customModelPath: string;
@@ -392,6 +393,7 @@ const sf = {
   model: $<HTMLSelectElement>("s-model"),
   backend: $<HTMLSelectElement>("s-backend"),
   ctx: $<HTMLSelectElement>("s-ctx"),
+  idle: $<HTMLSelectElement>("s-idle"),
   extra: $<HTMLInputElement>("s-extra"),
   serverPath: $<HTMLInputElement>("s-server-path"),
   modelPath: $<HTMLInputElement>("s-model-path"),
@@ -437,6 +439,11 @@ async function openSettings() {
     sf.ctx.add(new Option(settings.ctxSize.toLocaleString(), String(settings.ctxSize)));
     sf.ctx.value = String(settings.ctxSize);
   }
+  sf.idle.value = String(settings.idleUnloadSecs);
+  if (!sf.idle.value) {
+    sf.idle.add(new Option(`${settings.idleUnloadSecs} 秒後`, String(settings.idleUnloadSecs)));
+    sf.idle.value = String(settings.idleUnloadSecs);
+  }
   sf.extra.value = settings.extraArgs;
   sf.serverPath.value = settings.customServerPath;
   sf.modelPath.value = settings.customModelPath;
@@ -468,6 +475,7 @@ async function saveSettings() {
     modelQuant,
     backend: sf.backend.value,
     ctxSize: Number(sf.ctx.value),
+    idleUnloadSecs: Number(sf.idle.value),
     extraArgs: sf.extra.value.trim(),
     customServerPath: sf.serverPath.value.trim().replace(/^"(.*)"$/, "$1"),
     customModelPath: sf.modelPath.value.trim().replace(/^"(.*)"$/, "$1"),
