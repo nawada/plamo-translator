@@ -1,3 +1,4 @@
+mod applog;
 mod catalog;
 mod engine;
 mod pfml;
@@ -32,6 +33,11 @@ fn show_main(app: &AppHandle) {
         let _ = w.show();
         let _ = w.set_always_on_top(on_top);
         let _ = w.set_focus();
+        #[cfg(windows)]
+        if let Ok(hwnd) = w.hwnd() {
+            let ok = selection::force_foreground(hwnd.0 as isize);
+            applog::log(format!("show_main: foreground={}", ok));
+        }
     }
 }
 
@@ -43,6 +49,7 @@ fn on_hotkey(app: &AppHandle) {
     }
     let app = app.clone();
     std::thread::spawn(move || {
+        applog::log("hotkey pressed");
         let state = app.state::<AppState>();
         let settings = state.settings();
         let own_focused = app
@@ -74,6 +81,7 @@ fn register_shortcut(app: &AppHandle, shortcut: &str) -> Result<(), String> {
         .map_err(|e| format!("ショートカット「{}」を解釈できません: {}", shortcut, e))?;
     let gs = app.global_shortcut();
     let _ = gs.unregister_all();
+    applog::log(format!("register shortcut: {} (id {})", parsed.into_string(), parsed.id()));
     gs.register(parsed).map_err(|e| {
         format!(
             "ショートカット「{}」を登録できません。他のアプリが使用している可能性があります。({})",
@@ -325,7 +333,8 @@ pub fn run() {
         ))
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
-                .with_handler(|app, _shortcut, event| {
+                .with_handler(|app, shortcut, event| {
+                    applog::log(format!("shortcut event: {} {:?}", shortcut.into_string(), event.state()));
                     if event.state() == ShortcutState::Pressed {
                         on_hotkey(app);
                     }
@@ -337,6 +346,8 @@ pub fn run() {
             let config_dir = app.path().app_config_dir()?;
             let data_dir = app.path().app_local_data_dir()?;
             let log_dir = app.path().app_log_dir()?;
+            applog::init(log_dir.clone());
+            applog::log(format!("start v{}", app.package_info().version));
             let settings_path = config_dir.join("settings.json");
             let settings = Settings::load(&settings_path);
 
@@ -368,6 +379,7 @@ pub fn run() {
             build_tray(&handle)?;
 
             if let Err(e) = register_shortcut(&handle, &settings.shortcut) {
+                applog::log(&e);
                 *app.state::<AppState>().shortcut_error.lock().unwrap() = Some(e);
             }
 

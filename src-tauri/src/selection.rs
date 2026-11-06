@@ -89,9 +89,10 @@ mod imp {
             },
         };
 
-        wait_keys_released(Duration::from_millis(800));
+        let released = wait_keys_released(Duration::from_millis(800));
         let before = unsafe { GetClipboardSequenceNumber() };
         send_ctrl_c();
+        crate::applog::log(format!("capture: keys_released={} sent Ctrl+C", released));
 
         let start = Instant::now();
         let mut changed = false;
@@ -103,6 +104,7 @@ mod imp {
             }
         }
         if !changed {
+            crate::applog::log("capture: clipboard unchanged (no selection?)");
             return None;
         }
 
@@ -127,8 +129,40 @@ mod imp {
             Saved::Empty => cb.clear(),
         };
 
+        crate::applog::log(format!(
+            "capture: got {} chars",
+            text.as_ref().map(|t| t.chars().count()).unwrap_or(0)
+        ));
         text.filter(|t| !t.trim().is_empty())
     }
+
+    /// 他アプリが前面にある状態からでも確実にウィンドウを前面に出す
+    pub fn force_foreground(hwnd: isize) -> bool {
+        use windows_sys::Win32::System::Threading::{AttachThreadInput, GetCurrentThreadId};
+        use windows_sys::Win32::UI::WindowsAndMessaging::*;
+        unsafe {
+            let hwnd = hwnd as windows_sys::Win32::Foundation::HWND;
+            let fg = GetForegroundWindow();
+            if fg == hwnd {
+                return true;
+            }
+            let fg_thread = GetWindowThreadProcessId(fg, std::ptr::null_mut());
+            let cur = GetCurrentThreadId();
+            let attached = fg_thread != 0 && fg_thread != cur && AttachThreadInput(cur, fg_thread, 1) != 0;
+            ShowWindow(hwnd, SW_SHOW);
+            BringWindowToTop(hwnd);
+            SetForegroundWindow(hwnd);
+            if attached {
+                AttachThreadInput(cur, fg_thread, 0);
+            }
+            GetForegroundWindow() == hwnd
+        }
+    }
+}
+
+#[cfg(windows)]
+pub fn force_foreground(hwnd: isize) -> bool {
+    imp::force_foreground(hwnd)
 }
 
 #[cfg(windows)]
