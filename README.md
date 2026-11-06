@@ -70,6 +70,12 @@ npx tauri build    # インストーラ作成 (src-tauri/target/release/bundle/)
 cd src-tauri; cargo test --lib   # PFML3 プロンプト生成のテスト
 ```
 
+E2E テスト (初回セットアップ → 別ウィンドウで選択して Ctrl+K → 訳文表示までを自動操作し、スクリーンショットを保存):
+
+```powershell
+powershell -STA -File scripts\e2e-test.ps1 -Exe <plamo-translater.exe のパス> -OutDir <出力先>
+```
+
 WSL で開発している場合は、Windows 側の Rust / Node でビルドするスクリプトを使えます。
 
 ```bash
