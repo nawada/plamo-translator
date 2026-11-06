@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "PLaMo翻訳",
+  "mainBinaryName": "plamo-translater",
+  "version": "0.1.0",
+  "identifier": "jp.plamo-translater.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "PLaMo翻訳",
+        "width": 1040,
+        "height": 660,
+        "minWidth": 640,
+        "minHeight": 420,
+        "center": true,
+        "visible": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "msi"],
+    "publisher": "PLaMo Translater",
+    "shortDescription": "PLaMo 3 Translate を使ったローカル翻訳アプリ",
+    "longDescription": "Preferred Networks の翻訳特化 LLM「PLaMo 3 Translate」をローカルで動かす、DeepL ライクなデスクトップ翻訳アプリです。",
+    "copyright": "PLaMo 3 Translate is licensed under the PLaMo Community License.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "webviewInstallMode": { "type": "downloadBootstrapper" },
+      "nsis": {
+        "languages": ["Japanese", "English"],
+        "displayLanguageSelector": false,
+        "installMode": "currentUser"
+      },
+      "wix": { "language": "ja-JP" }
+    }
+  }
+}

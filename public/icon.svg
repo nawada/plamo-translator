@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3B5BDB"/>
+      <stop offset="1" stop-color="#1C2E80"/>
+    </linearGradient>
+  </defs>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg)"/>
+  <!-- 左の吹き出し: A -->
+  <path d="M96 128h176a40 40 0 0 1 40 40v104a40 40 0 0 1-40 40h-96l-56 48v-48h-24a40 40 0 0 1-40-40V168a40 40 0 0 1 40-40Z" fill="#fff"/>
+  <path d="M184 168l-46 112h26l9-24h46l9 24h26l-46-112h-24Zm12 34 15 34h-30l15-34Z" fill="#2B44B8"/>
+  <!-- 右の吹き出し: 訳文 -->
+  <path d="M416 216H264a40 40 0 0 0-40 40v96a40 40 0 0 0 40 40h88l56 48v-48h8a40 40 0 0 0 40-40v-96a40 40 0 0 0-40-40Z" fill="#8FB0FF"/>
+  <rect x="272" y="264" width="144" height="22" rx="11" fill="#1C2E80"/>
+  <rect x="272" y="304" width="112" height="22" rx="11" fill="#1C2E80"/>
+  <rect x="272" y="344" width="80" height="22" rx="11" fill="#1C2E80"/>
+</svg>
