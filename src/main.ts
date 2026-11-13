@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { LANGUAGES, guessLanguage, languageName, looksJapanese } from "./languages";
+import { setupScrollSync } from "./scrollsync";
 
 // ---------------------------------------------------------------------------
 // 型 (Rust 側の構造体と対応)
@@ -76,6 +77,7 @@ const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getEleme
 const sourceText = $<HTMLTextAreaElement>("source-text");
 const targetText = $("target-text");
 const targetPlaceholder = $("target-placeholder");
+const scrollSync = setupScrollSync(sourceText, targetText);
 const sourceLang = $<HTMLSelectElement>("source-lang");
 const targetLang = $<HTMLSelectElement>("target-lang");
 const formSelect = $<HTMLSelectElement>("form");
@@ -208,6 +210,7 @@ function renderOutput(streaming: boolean, error = false) {
   targetText.classList.toggle("error", error);
   targetPlaceholder.classList.toggle("hidden", output.length > 0 || streaming);
   btnCopy.disabled = !output || error;
+  if (!streaming) scrollSync.resync();
 }
 
 function updateSourceUi() {
