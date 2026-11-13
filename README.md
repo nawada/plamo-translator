@@ -89,6 +89,8 @@ scripts/build-windows.sh dev     # 開発実行
 
 ## ライセンスについて
 
+このアプリのソースコードは [MIT License](LICENSE) です。
+
 PLaMo 3 Translate のモデルは [PLaMo Community License](https://plamo.preferredai.jp/info/plamo-community-license-ja) で提供されています。
 個人・非商用利用は登録なしで無償利用できますが、商用利用には条件があります。詳細はライセンス本文を確認してください。
 llama.cpp は MIT License です。

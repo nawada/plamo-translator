@@ -2,7 +2,8 @@
 name = "plamo-translater"
 version = "0.1.0"
 description = "PLaMo 3 Translate を使ったデスクトップ翻訳アプリ"
-authors = ["naoki"]
+authors = ["Naoki WADA"]
+license = "MIT"
 edition = "2021"
 rust-version = "1.80"
 
