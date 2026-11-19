@@ -83,6 +83,7 @@ const targetLang = $<HTMLSelectElement>("target-lang");
 const formSelect = $<HTMLSelectElement>("form");
 const formWrap = $("form-wrap");
 const autoSwitchNote = $("auto-switch-note");
+const detectedNote = $("detected");
 const charCount = $("char-count");
 const translateStatus = $("translate-status");
 const btnClear = $("btn-clear");
@@ -108,6 +109,9 @@ let catalog: Catalog | null = null;
 let appInfo: AppInfo | null = null;
 
 let requestSeq = 0;
+/** 「言語を自動検出」時に推定した原文の言語 */
+let detectedLang: string | null = null;
+let detectSeq = 0;
 let activeRequest = 0;
 let output = "";
 let lastKey = "";
@@ -194,6 +198,22 @@ function effectiveTarget(text: string): { lang: string; switched: boolean } {
   return { lang: tgt, switched: false };
 }
 
+/** 自動検出時に原文の言語を推定して表示する */
+async function updateDetected(text: string) {
+  const seq = ++detectSeq;
+  let lang: string | null = null;
+  if (sourceLang.value === "auto" && text.trim()) {
+    try {
+      lang = await invoke<string | null>("detect_language", { text: text.slice(0, 2000) });
+    } catch {
+      lang = null;
+    }
+  }
+  if (seq !== detectSeq) return;
+  detectedLang = lang;
+  detectedNote.textContent = lang ? `検出: ${languageName(lang)}` : "";
+}
+
 function updateTargetUi() {
   const { lang, switched } = effectiveTarget(sourceText.value);
   autoSwitchNote.textContent = switched ? `→ ${languageName(lang)}に翻訳` : "";
@@ -229,6 +249,8 @@ function scheduleTranslate(delay = 450) {
 async function translateNow(force = false) {
   clearTimeout(debounceTimer);
   const text = sourceText.value;
+  await updateDetected(text);
+  const fromLang = sourceLang.value === "auto" ? detectedLang : null;
   if (!text.trim()) {
     if (activeRequest) void invoke("cancel_translation");
     activeRequest = 0;
@@ -271,7 +293,8 @@ async function translateNow(force = false) {
     output = result;
     renderOutput(false);
     const sec = ((performance.now() - startedAt) / 1000).toFixed(1);
-    translateStatus.textContent = `${languageName(lang)}に翻訳しました (${sec} 秒)`;
+    const from = fromLang ? `${languageName(fromLang)}から` : "";
+    translateStatus.textContent = `${from}${languageName(lang)}に翻訳しました (${sec} 秒)`;
   } catch (e) {
     if (id !== activeRequest) return;
     lastKey = "";
@@ -635,7 +658,7 @@ btnClear.addEventListener("click", () => {
 function swapLanguages() {
   const text = sourceText.value;
   const { lang: tgt } = effectiveTarget(text);
-  const src = sourceLang.value === "auto" ? guessLanguage(text || output) : sourceLang.value;
+  const src = sourceLang.value === "auto" ? (text && detectedLang) || guessLanguage(text || output) : sourceLang.value;
   sourceLang.value = tgt;
   store.set("sourceLang", tgt);
   targetLang.value = src;

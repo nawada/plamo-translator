@@ -1,5 +1,6 @@
 mod applog;
 mod catalog;
+mod detect;
 mod engine;
 mod pfml;
 mod selection;
@@ -181,6 +182,11 @@ async fn translate(
 #[tauri::command]
 fn cancel_translation(state: tauri::State<AppState>) {
     state.translate_gen.store(0, Ordering::SeqCst);
+}
+
+#[tauri::command]
+fn detect_language(text: String) -> Option<String> {
+    detect::detect_language(&text)
 }
 
 #[tauri::command]
@@ -415,6 +421,7 @@ pub fn run() {
             restart_engine,
             translate,
             cancel_translation,
+            detect_language,
             take_pending_selection,
             get_catalog,
             get_app_info,
