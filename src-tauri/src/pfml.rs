@@ -17,7 +17,8 @@ pub struct GlossaryEntry {
 pub struct PromptOptions<'a> {
     pub source_lang: Option<&'a str>,
     pub target_lang: &'a str,
-    /// "plain" | "polite" (翻訳先が日本語のときのみ有効)
+    /// "plain" | "polite" | "easy" (翻訳先が日本語のときのみ有効)
+    /// "easy" (やさしい日本語) は公式には記載がないが、モデルが実際に反応する
     pub form: Option<&'a str>,
     pub context: Option<&'a str>,
     pub glossary: &'a [GlossaryEntry],
@@ -82,7 +83,7 @@ pub fn build_prompt(text: &str, history: &[(String, String)], opt: &PromptOption
     p.push_str("<|plamo:tag|>output");
     p.push_str(&tgt_attr);
     if opt.target_lang == "ja" {
-        if let Some(form) = opt.form.filter(|f| matches!(*f, "plain" | "polite")) {
+        if let Some(form) = opt.form.filter(|f| matches!(*f, "plain" | "polite" | "easy")) {
             p.push_str("<|plamo:key|>form<|plamo:val|>");
             p.push_str(form);
         }
@@ -218,6 +219,12 @@ mod tests {
 <|plamo:tag|>input<|plamo:msg|>Please open the project dashboard.\
 <|plamo:tag|>output<|plamo:key|>lang<|plamo:val|>ja<|plamo:msg|>"
         );
+    }
+
+    #[test]
+    fn easy_form_is_passed() {
+        let p = build_prompt("Hello.", &[], &PromptOptions { target_lang: "ja", form: Some("easy"), ..Default::default() });
+        assert!(p.ends_with("<|plamo:val|>ja<|plamo:key|>form<|plamo:val|>easy<|plamo:msg|>"));
     }
 
     #[test]

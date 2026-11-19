@@ -51,7 +51,7 @@ pub struct Settings {
     pub secondary_lang: String,
     /// 日本語の原文を自動で secondary_lang に翻訳する
     pub auto_switch: bool,
-    /// 日本語の文体: "auto" | "plain" | "polite"
+    /// 日本語の文体: "auto" | "plain" | "polite" | "easy"
     pub form: String,
     /// 入力中に自動で翻訳する
     pub auto_translate: bool,
@@ -129,7 +129,7 @@ impl Settings {
         if self.shortcut.trim().is_empty() {
             self.shortcut = d.shortcut.clone();
         }
-        if !matches!(self.form.as_str(), "auto" | "plain" | "polite") {
+        if !matches!(self.form.as_str(), "auto" | "plain" | "polite" | "easy") {
             self.form = "auto".into();
         }
         self

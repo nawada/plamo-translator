@@ -25,7 +25,7 @@ interface Settings {
   targetLang: string;
   secondaryLang: string;
   autoSwitch: boolean;
-  form: "auto" | "plain" | "polite";
+  form: "auto" | "plain" | "polite" | "easy";
   autoTranslate: boolean;
   closeToTray: boolean;
   launchAtStartup: boolean;
