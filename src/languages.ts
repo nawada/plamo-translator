@@ -60,7 +60,11 @@ export const LANGUAGES: Language[] = [
   { code: "lt", name: "リトアニア語" },
 ];
 
+/** 翻訳先だけに出す「やさしい日本語」(日本語 + 文体 easy として翻訳する) */
+export const EASY_JA = "ja-easy";
+
 export function languageName(code: string): string {
+  if (code === EASY_JA) return "やさしい日本語";
   return LANGUAGES.find((l) => l.code === code)?.name ?? code;
 }
 

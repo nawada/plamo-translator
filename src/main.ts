@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { LANGUAGES, guessLanguage, languageName, looksJapanese } from "./languages";
+import { EASY_JA, LANGUAGES, guessLanguage, languageName, looksJapanese } from "./languages";
 import { setupScrollSync } from "./scrollsync";
 
 // ---------------------------------------------------------------------------
@@ -180,16 +180,21 @@ function parseGlossary(text: string): GlossaryEntry[] {
 // 言語選択
 // ---------------------------------------------------------------------------
 
-function fillLanguageSelect(sel: HTMLSelectElement, withAuto: boolean) {
+function fillLanguageSelect(sel: HTMLSelectElement, withAuto: boolean, withEasy = false) {
   sel.innerHTML = "";
   if (withAuto) sel.add(new Option("言語を自動検出", "auto"));
-  for (const l of LANGUAGES) sel.add(new Option(l.name, l.code));
+  for (const l of LANGUAGES) {
+    sel.add(new Option(l.name, l.code));
+    if (withEasy && l.code === "ja") sel.add(new Option(languageName(EASY_JA), EASY_JA));
+  }
 }
 
 /** 実際に使う翻訳先 (日本語の原文を自動で別言語にする処理を含む) */
 function effectiveTarget(text: string): { lang: string; switched: boolean } {
   const tgt = targetLang.value;
   const src = sourceLang.value;
+  // やさしい日本語は日本語の原文を書き換える (日日翻訳) ために使うので切り替えない
+  if (tgt === EASY_JA) return { lang: tgt, switched: false };
   const srcIsTarget = src === tgt || (src === "auto" && tgt === "ja" && looksJapanese(text));
   if (settings.autoSwitch && srcIsTarget) {
     const alt = tgt === "ja" ? settings.secondaryLang : "ja";
@@ -271,8 +276,8 @@ async function translateNow(force = false) {
   const request = {
     text,
     sourceLang: sourceLang.value === "auto" ? null : sourceLang.value,
-    targetLang: lang,
-    form: lang === "ja" ? formSelect.value : null,
+    targetLang: lang === EASY_JA ? "ja" : lang,
+    form: lang === EASY_JA ? "easy" : lang === "ja" ? formSelect.value : null,
     context: contextInput.value.trim() || null,
     glossary: parseGlossary(glossaryInput.value),
   };
@@ -659,8 +664,10 @@ function swapLanguages() {
   const text = sourceText.value;
   const { lang: tgt } = effectiveTarget(text);
   const src = sourceLang.value === "auto" ? (text && detectedLang) || guessLanguage(text || output) : sourceLang.value;
-  sourceLang.value = tgt;
-  store.set("sourceLang", tgt);
+  // やさしい日本語は原文の言語としては日本語として扱う
+  const newSrc = tgt === EASY_JA ? "ja" : tgt;
+  sourceLang.value = newSrc;
+  store.set("sourceLang", newSrc);
   targetLang.value = src;
   void persistQuick({ targetLang: src });
   if (output && !targetText.classList.contains("error")) {
@@ -741,7 +748,7 @@ async function takeSelection() {
 
 async function init() {
   fillLanguageSelect(sourceLang, true);
-  fillLanguageSelect(targetLang, false);
+  fillLanguageSelect(targetLang, false, true);
   fillLanguageSelect(sf.secondary, false);
 
   settings = await invoke<Settings>("get_settings");
