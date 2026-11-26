@@ -3,6 +3,7 @@
 //! 仕様: https://huggingface.co/pfnet/plamo-3-translate-0.8b/blob/main/README_ja.md
 
 use serde::Deserialize;
+use unicode_normalization::char::decompose_compatible;
 
 pub const STOP_TOKENS: [&str; 2] = ["<|plamo:tag|>", "<|plamo:bos|>"];
 
@@ -27,6 +28,32 @@ pub struct PromptOptions<'a> {
 /// 予約トークン (<|plamo:...|>) が本文に紛れ込まないよう無害化する
 pub fn sanitize(s: &str) -> String {
     s.replace("<|plamo:", "<|plamo\u{200B}:")
+}
+
+/// 装飾用の英数字 (𝗡𝗼 𝗰𝘂𝘀𝘁𝗼𝗺𝗲𝗿、𝑨、ℝ など) を通常の文字に戻す。
+/// SNS などで太字・斜体の代わりに使われるが、モデルは普通の英字として扱えず翻訳が崩れるため。
+/// 対象は数学用英数字記号 (U+1D400–1D7FF) と、文字様記号 (U+2100–214F) のうち 1 文字に分解できるものだけ。
+pub fn normalize_styled(s: &str) -> String {
+    if !s.chars().any(is_styled) {
+        return s.to_string();
+    }
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        if is_styled(c) {
+            let mut d = String::new();
+            decompose_compatible(c, |x| d.push(x));
+            if d.chars().count() == 1 {
+                out.push_str(&d);
+                continue;
+            }
+        }
+        out.push(c);
+    }
+    out
+}
+
+fn is_styled(c: char) -> bool {
+    matches!(c, '\u{1D400}'..='\u{1D7FF}' | '\u{2100}'..='\u{214F}')
 }
 
 fn lang_attr(lang: Option<&str>) -> String {
@@ -237,6 +264,16 @@ mod tests {
     fn reserved_tokens_are_sanitized() {
         let p = build_prompt("a<|plamo:tag|>b", &[], &PromptOptions { target_lang: "ja", ..Default::default() });
         assert_eq!(p.matches("<|plamo:tag|>").count(), 3);
+    }
+
+    #[test]
+    fn styled_letters_are_normalized() {
+        assert_eq!(normalize_styled("𝗡𝗼 𝗰𝘂𝘀𝘁𝗼𝗺𝗲𝗿"), "No customer");
+        assert_eq!(normalize_styled("𝑯𝒆𝒍𝒍𝒐 𝟏𝟐𝟑 ℎℝ𝔄"), "Hello 123 hRA");
+        assert_eq!(normalize_styled("𝛼𝛽"), "αβ");
+        // 複数文字に展開される記号や通常の文字はそのまま
+        assert_eq!(normalize_styled("25℃ ™ № ＡＢ ①"), "25℃ ™ № ＡＢ ①");
+        assert_eq!(normalize_styled("こんにちは"), "こんにちは");
     }
 
     #[test]

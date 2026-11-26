@@ -75,7 +75,7 @@ fn chinese_variant(text: &str) -> &'static str {
 
 /// テキストの言語を推定し、PLaMo 3 Translate の言語コードで返す。推定できなければ None。
 pub fn detect_language(text: &str) -> Option<String> {
-    let sample: String = text.chars().take(SAMPLE_CHARS).collect();
+    let sample: String = crate::pfml::normalize_styled(&text.chars().take(SAMPLE_CHARS).collect::<String>());
     if sample.trim().is_empty() {
         return None;
     }
@@ -109,6 +109,11 @@ mod tests {
         for (text, want) in cases {
             assert_eq!(detect_language(text).as_deref(), Some(want), "{text}");
         }
+    }
+
+    #[test]
+    fn styled_letters_are_detected() {
+        assert_eq!(detect_language("𝗧𝗵𝗲 𝗺𝗲𝗲𝘁𝗶𝗻𝗴 𝗵𝗮𝘀 𝗯𝗲𝗲𝗻 𝗿𝗲𝘀𝗰𝗵𝗲𝗱𝘂𝗹𝗲𝗱 𝘁𝗼 𝗻𝗲𝘅𝘁 𝗠𝗼𝗻𝗱𝗮𝘆.").as_deref(), Some("en"));
     }
 
     #[test]

@@ -34,7 +34,13 @@ enum Outcome {
     Cancelled,
 }
 
-pub async fn translate(app: &AppHandle, req: TranslateRequest, request_id: u64) -> Result<Option<String>, String> {
+pub async fn translate(app: &AppHandle, mut req: TranslateRequest, request_id: u64) -> Result<Option<String>, String> {
+    req.text = pfml::normalize_styled(&req.text);
+    req.context = req.context.map(|c| pfml::normalize_styled(&c));
+    for g in &mut req.glossary {
+        g.source = pfml::normalize_styled(&g.source);
+        g.target = pfml::normalize_styled(&g.target);
+    }
     let state = app.state::<AppState>();
     state.translate_gen.store(request_id, Ordering::SeqCst);
 
